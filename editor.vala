@@ -54,6 +54,10 @@ void vala_stuff (string filename, Gtk.ListStore ts) {
     ctx.add_external_package ("gtk+-3.0");
     ctx.add_external_package ("gtksourceview-3.0");
     ctx.add_external_package ("libvala-0.30");
+    /**
+     * Vala expects you to handle unknown namespace/missing package errors via Report
+     * If you don't quit in case of errors, you will have NULL variable types and CRITICALs
+     */
     ctx.profile = Vala.Profile.GOBJECT;
 
     print ("========== adding files ==============\n");
