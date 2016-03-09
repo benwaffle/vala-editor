@@ -7,31 +7,35 @@ class Reporter : Vala.Report {
 
     public override void depr (Vala.SourceReference? source, string message) {
         store.insert_with_values (null, -1,
-            0, @"Deprecated: $message",
-            1, source.begin.line,
-            2, source.begin.column);
+            0, "dialog-warning",
+            1, @"Deprecated: $message",
+            2, source.begin.line,
+            3, source.begin.column);
 
         ++warnings;
     }
     public override void err (Vala.SourceReference? source, string message) {
         store.insert_with_values (null, -1,
-            0, @"Error: $message",
-            1, source.begin.line,
-            2, source.begin.column);
+            0, "dialog-error",
+            1, @"Error: $message",
+            2, source.begin.line,
+            3, source.begin.column);
         ++errors;
     }
     public override void note (Vala.SourceReference? source, string message) {
         store.insert_with_values (null, -1,
-            0, @"Note: $message",
-            1, source.begin.line,
-            2, source.begin.column);
+            0, "text-x-generic",
+            1, @"Note: $message",
+            2, source.begin.line,
+            3, source.begin.column);
         ++warnings;
     }
     public override void warn (Vala.SourceReference? source, string message) {
         store.insert_with_values (null, -1,
-            0, @"Warning: $message",
-            1, source.begin.line,
-            2, source.begin.column);
+            0, "dialog-warning",
+            1, @"Warning: $message",
+            2, source.begin.line,
+            3, source.begin.column);
         ++warnings;
     }
 }
@@ -94,9 +98,15 @@ public class MainWindow : Gtk.ApplicationWindow {
 
         ((Gtk.SourceBuffer) srcview.buffer).language = Gtk.SourceLanguageManager.get_default ().get_language ("vala");
 
-        error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Message", new Gtk.CellRendererText (), "text", 0));
-        error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Line", new Gtk.CellRendererText (), "text", 1));
-        error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Column", new Gtk.CellRendererText (), "text", 2));
+        var crp = new Gtk.CellRendererPixbuf ();
+        var col = new Gtk.TreeViewColumn ();
+        col.pack_start (crp, false);
+        col.add_attribute (crp, "icon-name", 0);
+        error_list.append_column (col);
+
+        error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Message", new Gtk.CellRendererText (), "text", 1));
+        error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Line", new Gtk.CellRendererText (), "text", 2));
+        error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Column", new Gtk.CellRendererText (), "text", 3));
 
         filechooser.file_set.connect (() => {
             File f = filechooser.get_file ();

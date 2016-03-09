@@ -5,6 +5,8 @@
   <requires lib="gtksourceview" version="3.0"/>
   <object class="GtkListStore" id="errorstore">
     <columns>
+      <!-- column-name icon -->
+      <column type="gchararray"/>
       <!-- column-name Error -->
       <column type="gchararray"/>
       <!-- column-name Line -->
