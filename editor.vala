@@ -43,6 +43,7 @@ void vala_stuff (string filename, Gtk.ListStore ts) {
     var ctx = new Vala.CodeContext ();
     Vala.CodeContext.push (ctx);
 
+    ctx.profile = Vala.Profile.GOBJECT;
     for (int i = 2; i <= 30; i += 2) {
         ctx.add_define ("VALA_0_%d".printf (i));
     }
@@ -61,23 +62,26 @@ void vala_stuff (string filename, Gtk.ListStore ts) {
      * Vala expects you to handle unknown namespace/missing package errors via Report
      * If you don't quit in case of errors, you will have NULL variable types and CRITICALs
      */
-    ctx.profile = Vala.Profile.GOBJECT;
 
     print ("========== adding files ==============\n");
 
     ctx.add_source_filename (filename);
     print ("%d errors, %d warnings\n", ctx.report.get_errors (), ctx.report.get_warnings ());
 
-    print ("========== parsing ==============\n");
+    if (ctx.report.get_errors () == 0) {
+        print ("========== parsing ==============\n");
 
-    var parser = new Vala.Parser ();
-    parser.parse (ctx);
-    print ("%d errors, %d warnings\n", ctx.report.get_errors (), ctx.report.get_warnings ());
+        var parser = new Vala.Parser ();
+        parser.parse (ctx);
+        print ("%d errors, %d warnings\n", ctx.report.get_errors (), ctx.report.get_warnings ());
 
-    print ("========== checking ==============\n");
+        if (ctx.report.get_errors () == 0) {
+            print ("========== checking ==============\n");
 
-    ctx.check ();
-    print ("%d errors, %d warnings\n", ctx.report.get_errors (), ctx.report.get_warnings ());
+            ctx.check ();
+            print ("%d errors, %d warnings\n", ctx.report.get_errors (), ctx.report.get_warnings ());
+        }
+    }
 
     Vala.CodeContext.pop ();
 }
