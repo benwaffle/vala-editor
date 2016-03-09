@@ -11,7 +11,6 @@ class Reporter : Vala.Report {
             1, @"Deprecated: $message",
             2, source.begin.line,
             3, source.begin.column);
-
         ++warnings;
     }
     public override void err (Vala.SourceReference? source, string message) {
@@ -98,12 +97,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
         ((Gtk.SourceBuffer) srcview.buffer).language = Gtk.SourceLanguageManager.get_default ().get_language ("vala");
 
-        var crp = new Gtk.CellRendererPixbuf ();
-        var col = new Gtk.TreeViewColumn ();
-        col.pack_start (crp, false);
-        col.add_attribute (crp, "icon-name", 0);
-        error_list.append_column (col);
-
+        error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("", new Gtk.CellRendererPixbuf (), "icon-name", 0));
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Message", new Gtk.CellRendererText (), "text", 1));
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Line", new Gtk.CellRendererText (), "text", 2));
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Column", new Gtk.CellRendererText (), "text", 3));
