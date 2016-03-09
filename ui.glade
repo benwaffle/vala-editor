@@ -3,6 +3,16 @@
 <interface>
   <requires lib="gtk+" version="3.16"/>
   <requires lib="gtksourceview" version="3.0"/>
+  <object class="GtkListStore" id="errorstore">
+    <columns>
+      <!-- column-name Error -->
+      <column type="gchararray"/>
+      <!-- column-name Line -->
+      <column type="gint"/>
+      <!-- column-name Column -->
+      <column type="gint"/>
+    </columns>
+  </object>
   <object class="GtkFileFilter" id="filefilter1">
     <patterns>
       <pattern>*.vala</pattern>
@@ -26,6 +36,33 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkFrame" id="frame1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label_xalign">0</property>
+            <property name="shadow_type">none</property>
+            <child>
+              <object class="GtkEntry" id="packages_entry">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="placeholder_text" translatable="yes">gio-2.0 gtk+-3.0</property>
+              </object>
+            </child>
+            <child type="label">
+              <object class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Packages</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
@@ -146,35 +183,44 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
-          <object class="GtkFrame" id="frame1">
+          <object class="GtkFrame" id="frame4">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label_xalign">0</property>
             <property name="shadow_type">none</property>
             <child>
-              <object class="GtkEntry" id="packages_entry">
+              <object class="GtkScrolledWindow" id="scrolledwindow2">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="placeholder_text" translatable="yes">gio-2.0 gtk+-3.0</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkTreeView" id="error_list">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="model">errorstore</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection" id="treeview-selection2"/>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
             <child type="label">
-              <object class="GtkLabel" id="label1">
+              <object class="GtkLabel" id="label4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Packages</property>
+                <property name="label" translatable="yes">Errors</property>
               </object>
             </child>
           </object>
           <packing>
-            <property name="expand">False</property>
+            <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
