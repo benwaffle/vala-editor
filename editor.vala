@@ -16,18 +16,36 @@ class Reporter : Vala.Report {
 void vala_stuff (string filename) {
     var ctx = new Vala.CodeContext ();
     Vala.CodeContext.push (ctx);
-    ctx.add_package ("glib-2.0");
-    ctx.add_package ("gobject-2.0");
-    ctx.add_package ("gtk+-3.0");
-    ctx.add_package ("gtksourceview-3.0");
-    ctx.profile = Vala.Profile.GOBJECT;
-    ctx.add_source_filename (filename, true, false);
+
+    for (int i = 2; i <= 30; i += 2) {
+        ctx.add_define ("VALA_0_%d".printf (i));
+    }
+    ctx.target_glib_major = 2;
+    ctx.target_glib_major = 44;
+    for (int i = 16; i <= ctx.target_glib_major; i += 2) {
+        ctx.add_define ("GLIB_2_%d".printf (i));
+    }
     ctx.report = new Reporter ();
+    ctx.add_external_package ("glib-2.0");
+    ctx.add_external_package ("gobject-2.0");
+    ctx.add_external_package ("gtk+-3.0");
+    ctx.add_external_package ("gtksourceview-3.0");
+    ctx.add_external_package ("libvala-0.32");
+    ctx.profile = Vala.Profile.GOBJECT;
+
+    print ("========== adding files ==============\n");
+
+    ctx.add_source_filename (filename);
+
+    print ("========== parsing ==============\n");
 
     var parser = new Vala.Parser ();
     parser.parse (ctx);
 
+    print ("========== checking ==============\n");
+
     ctx.check ();
+
     Vala.CodeContext.pop ();
 }
 
