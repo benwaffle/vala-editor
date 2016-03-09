@@ -1,3 +1,36 @@
+class Reporter : Vala.Report {
+    public override void depr (Vala.SourceReference? source, string message) {
+        GLib.message (@"Deprecated: $message");
+    }
+    public override void err (Vala.SourceReference? source, string message) {
+        GLib.message (@"Error: $message");
+    }
+    public override void note (Vala.SourceReference? source, string message) {
+        GLib.message (@"Note: $message");
+    }
+    public override void warn (Vala.SourceReference? source, string message) {
+        GLib.message (@"Warning: $message");
+    }
+}
+
+void vala_stuff (string filename) {
+    var ctx = new Vala.CodeContext ();
+    Vala.CodeContext.push (ctx);
+    ctx.add_package ("glib-2.0");
+    ctx.add_package ("gobject-2.0");
+    ctx.add_package ("gtk+-3.0");
+    ctx.add_package ("gtksourceview-3.0");
+    ctx.profile = Vala.Profile.GOBJECT;
+    ctx.add_source_filename (filename, true, false);
+    ctx.report = new Reporter ();
+
+    var parser = new Vala.Parser ();
+    parser.parse (ctx);
+
+    ctx.check ();
+    Vala.CodeContext.pop ();
+}
+
 public class MainWindow : Gtk.ApplicationWindow {
     public MainWindow (Gtk.Application a) {
         Object (application: a);
@@ -36,10 +69,11 @@ public class MainWindow : Gtk.ApplicationWindow {
             File f = fc.get_file ();
             f.load_contents_async.begin (null, (obj, res) => {
                 uint8[] contents;
-                string etag;
                 try {
-                    f.load_contents_async.end (res, out contents, out etag);
+                    f.load_contents_async.end (res, out contents, null);
                     src.buffer.text = (string) contents;
+
+                    vala_stuff (f.get_path ());
                 } catch (Error e) {
                     error (e.message);
                 }
