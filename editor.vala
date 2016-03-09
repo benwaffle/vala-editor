@@ -16,8 +16,6 @@ public class MainWindow : Gtk.ApplicationWindow {
 
         var src_scroll = new Gtk.ScrolledWindow (null, null);
         var src = new Gtk.SourceView ();
-        var map = new Gtk.SourceMap ();
-        map.view = src;
         src_scroll.add (src);
 
         src.monospace = true;
@@ -28,6 +26,8 @@ public class MainWindow : Gtk.ApplicationWindow {
         src.smart_backspace = true;
         ((Gtk.SourceBuffer) src.buffer).language = Gtk.SourceLanguageManager.get_default ().get_language ("vala");
 
+        var map = new Gtk.SourceMap ();
+        map.view = src;
         srcbox.pack_start (src_scroll);
         srcbox.pack_end (map, false, false);
         srcbox.pack_end (new Gtk.Separator (Gtk.Orientation.VERTICAL), false, false);
