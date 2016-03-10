@@ -39,9 +39,30 @@ class Reporter : Vala.Report {
     }
 }
 
+Gdk.Pixbuf? type_image (string type) {
+    try {
+        if (type == "ValaClass")
+            return new Gdk.Pixbuf.from_resource ("/me/iofel/vala-editor/class.svg");
+        if (type == "ValaMethod")
+            return new Gdk.Pixbuf.from_resource ("/me/iofel/vala-editor/method.svg");
+        if (type == "ValaField")
+            return new Gdk.Pixbuf.from_resource ("/me/iofel/vala-editor/field.svg");
+        if (type == "ValaNamespace")
+            return new Gdk.Pixbuf.from_resource ("/me/iofel/vala-editor/namespace.svg");
+        if (type == "ValaCreationMethod")
+            return new Gdk.Pixbuf.from_resource ("/me/iofel/vala-editor/constructor.svg");
+    } catch (Error e) {
+        warning (e.message);
+    }
+    return null;
+}
+
 void findsyms (Vala.Symbol top, Gtk.TreeStore tree, Gtk.TreeIter? parent = null) {
+    if (top is Vala.Parameter)
+        return;
+
     Gtk.TreeIter cur;
-    tree.insert_with_values (out cur, parent, -1, 0, top.get_full_name ());
+    tree.insert_with_values (out cur, parent, -1, 0, type_image (top.type_name), 1, top.name);
     Vala.Map<string, Vala.Symbol>? syms = top.scope.get_symbol_table ();
     if (syms != null)
         foreach (string s in syms.get_keys ())
@@ -125,8 +146,9 @@ public class MainWindow : Gtk.ApplicationWindow {
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Line", new Gtk.CellRendererText (), "text", 2));
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Column", new Gtk.CellRendererText (), "text", 3));
 
-        symboltree.model = new Gtk.TreeStore (1, typeof (string));
-        symboltree.insert_column_with_attributes (-1, "Symbol", new Gtk.CellRendererText (), "text", 0);
+        symboltree.model = new Gtk.TreeStore (2, typeof (Gdk.Pixbuf), typeof (string));
+        symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererPixbuf (), "pixbuf", 0);
+        symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererText (), "text", 1);
 
         filechooser.file_set.connect (() => {
             File f = filechooser.get_file ();

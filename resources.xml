@@ -2,5 +2,10 @@
 <gresources>
     <gresource prefix="/me/iofel/vala-editor">
         <file>ui.glade</file>
+        <file>class.svg</file>
+        <file>constructor.svg</file>
+        <file>field.svg</file>
+        <file>method.svg</file>
+        <file>namespace.svg</file>
     </gresource>
 </gresources>
