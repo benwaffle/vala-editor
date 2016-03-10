@@ -39,7 +39,16 @@ class Reporter : Vala.Report {
     }
 }
 
-void vala_stuff (string filename, Gtk.ListStore ts) {
+void findsyms (Vala.Symbol top, Gtk.TreeStore tree, Gtk.TreeIter? parent = null) {
+    Gtk.TreeIter cur;
+    tree.insert_with_values (out cur, parent, -1, 0, top.get_full_name ());
+    Vala.Map<string, Vala.Symbol>? syms = top.scope.get_symbol_table ();
+    if (syms != null)
+        foreach (string s in syms.get_keys ())
+            findsyms (syms[s], tree, cur);
+}
+
+void vala_stuff (string filename, Gtk.ListStore errors, Gtk.TreeStore syms) {
     var ctx = new Vala.CodeContext ();
     Vala.CodeContext.push (ctx);
 
@@ -52,7 +61,7 @@ void vala_stuff (string filename, Gtk.ListStore ts) {
     for (int i = 16; i <= ctx.target_glib_major; i += 2) {
         ctx.add_define ("GLIB_2_%d".printf (i));
     }
-    ctx.report = new Reporter (ts);
+    ctx.report = new Reporter (errors);
     ctx.add_external_package ("glib-2.0");
     ctx.add_external_package ("gobject-2.0");
     ctx.add_external_package ("gtk+-3.0");
@@ -80,6 +89,16 @@ void vala_stuff (string filename, Gtk.ListStore ts) {
 
             ctx.check ();
             print ("%d errors, %d warnings\n", ctx.report.get_errors (), ctx.report.get_warnings ());
+
+            if (ctx.report.get_errors () == 0) {
+                foreach (Vala.SourceFile file in ctx.get_source_files ())
+                    if (file.filename.has_suffix (".vala")) {
+                        Vala.List<Vala.CodeNode> nodes = file.get_nodes ();
+                        foreach (Vala.CodeNode node in nodes)
+                            if (node is Vala.Symbol)
+                                findsyms ((Vala.Symbol) node, syms);
+                    }
+            }
         }
     }
 
@@ -106,6 +125,9 @@ public class MainWindow : Gtk.ApplicationWindow {
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Line", new Gtk.CellRendererText (), "text", 2));
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Column", new Gtk.CellRendererText (), "text", 3));
 
+        symboltree.model = new Gtk.TreeStore (1, typeof (string));
+        symboltree.insert_column_with_attributes (-1, "Symbol", new Gtk.CellRendererText (), "text", 0);
+
         filechooser.file_set.connect (() => {
             File f = filechooser.get_file ();
             f.load_contents_async.begin (null, (obj, res) => {
@@ -115,7 +137,8 @@ public class MainWindow : Gtk.ApplicationWindow {
                     srcview.buffer.text = (string) contents;
 
                     errorstore.clear ();
-                    vala_stuff (f.get_path (), errorstore);
+                    ((Gtk.TreeStore)symboltree.model).clear ();
+                    vala_stuff (f.get_path (), errorstore, (Gtk.TreeStore) symboltree.model);
                 } catch (Error e) {
                     error (e.message);
                 }
