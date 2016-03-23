@@ -1,4 +1,14 @@
+class SourceError {
+    public Vala.SourceReference loc;
+    public string message;
+    public SourceError(Vala.SourceReference loc, string message) {
+        this.loc = loc;
+        this.message = message;
+    }
+}
+
 class Reporter : Vala.Report {
+    public GenericArray<SourceError> errorlist = new GenericArray<SourceError> ();
     Gtk.ListStore store;
 
     public Reporter (Gtk.ListStore store) {
@@ -14,6 +24,7 @@ class Reporter : Vala.Report {
         ++warnings;
     }
     public override void err (Vala.SourceReference? source, string message) {
+        errorlist.add (new SourceError (source, message));
         store.insert_with_values (null, -1,
             0, "dialog-error",
             1, @"Error: $message",
@@ -69,7 +80,7 @@ void findsyms (Vala.Symbol top, Gtk.TreeStore tree, Gtk.TreeIter? parent = null)
             findsyms (syms[s], tree, cur);
 }
 
-void vala_stuff (string filename, Gtk.ListStore errors, Gtk.TreeStore syms) {
+void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, Gtk.TreeStore syms) {
     var ctx = new Vala.CodeContext ();
     Vala.CodeContext.push (ctx);
 
@@ -123,6 +134,17 @@ void vala_stuff (string filename, Gtk.ListStore errors, Gtk.TreeStore syms) {
         }
     }
 
+    source.create_tag ("error", underline: Pango.Underline.ERROR);
+
+    var report = ((Reporter) ctx.report);
+    report.errorlist.foreach (err => {
+        Gtk.TextIter begin;
+        Gtk.TextIter end;
+        source.get_iter_at_line_offset (out begin, err.loc.begin.line-1, err.loc.begin.column-1);
+        source.get_iter_at_line_offset (out end, err.loc.end.line-1, err.loc.end.column);
+        source.apply_tag_by_name ("error", begin, end);
+    });
+
     Vala.CodeContext.pop ();
 }
 
@@ -160,7 +182,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
                     errorstore.clear ();
                     ((Gtk.TreeStore)symboltree.model).clear ();
-                    vala_stuff (f.get_path (), errorstore, (Gtk.TreeStore) symboltree.model);
+                    vala_stuff (f.get_path (), srcview.buffer, errorstore, (Gtk.TreeStore) symboltree.model);
                 } catch (Error e) {
                     error (e.message);
                 }
