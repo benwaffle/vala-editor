@@ -4,10 +4,10 @@ VALAFLAGS = \
 	--pkg libvala-0.30 \
 	-g \
 	--target-glib 2.44 \
-	--gresources resources.xml
+	--gresources data/resources.xml
 
 editor: editor.vala resources.c
 	valac $(VALAFLAGS) editor.vala resources.c
 
-resources.c: resources.xml
-	glib-compile-resources --generate-source $< --target $@
+resources.c: data/resources.xml
+	glib-compile-resources --sourcedir data --generate-source $< --target $@
