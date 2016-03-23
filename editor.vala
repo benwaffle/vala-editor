@@ -1,6 +1,7 @@
 class SourceError {
     public Vala.SourceReference loc;
     public string message;
+
     public SourceError(Vala.SourceReference loc, string message) {
         this.loc = loc;
         this.message = message;
@@ -9,6 +10,7 @@ class SourceError {
 
 class Reporter : Vala.Report {
     public GenericArray<SourceError> errorlist = new GenericArray<SourceError> ();
+    public GenericArray<SourceError> warnlist = new GenericArray<SourceError> ();
     Gtk.ListStore store;
 
     public Reporter (Gtk.ListStore store) {
@@ -16,6 +18,7 @@ class Reporter : Vala.Report {
     }
 
     public override void depr (Vala.SourceReference? source, string message) {
+        warnlist.add (new SourceError (source, message));
         store.insert_with_values (null, -1,
             0, "dialog-warning",
             1, @"Deprecated: $message",
@@ -33,6 +36,7 @@ class Reporter : Vala.Report {
         ++errors;
     }
     public override void note (Vala.SourceReference? source, string message) {
+        warnlist.add (new SourceError (source, message));
         store.insert_with_values (null, -1,
             0, "text-x-generic",
             1, @"Note: $message",
@@ -41,6 +45,7 @@ class Reporter : Vala.Report {
         ++warnings;
     }
     public override void warn (Vala.SourceReference? source, string message) {
+        warnlist.add (new SourceError (source, message));
         store.insert_with_values (null, -1,
             0, "dialog-warning",
             1, @"Warning: $message",
@@ -134,15 +139,31 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
         }
     }
 
-    source.create_tag ("error", underline: Pango.Underline.ERROR);
-
     var report = ((Reporter) ctx.report);
     report.errorlist.foreach (err => {
+        var tag = new Gtk.TextTag ();
+        tag.set_data ("message", err.message);
+        tag.underline = Pango.Underline.ERROR;
+        source.tag_table.add (tag);
+
         Gtk.TextIter begin;
         Gtk.TextIter end;
         source.get_iter_at_line_offset (out begin, err.loc.begin.line-1, err.loc.begin.column-1);
         source.get_iter_at_line_offset (out end, err.loc.end.line-1, err.loc.end.column);
-        source.apply_tag_by_name ("error", begin, end);
+        source.apply_tag (tag, begin, end);
+    });
+    report.warnlist.foreach (err => {
+        var tag = new Gtk.TextTag ();
+        tag.set_data ("message", err.message);
+        tag.underline_rgba = Gdk.RGBA () { red = 1, blue = 0, green = 1, alpha = 1};
+        tag.underline = Pango.Underline.ERROR;
+        source.tag_table.add (tag);
+
+        Gtk.TextIter begin;
+        Gtk.TextIter end;
+        source.get_iter_at_line_offset (out begin, err.loc.begin.line-1, err.loc.begin.column-1);
+        source.get_iter_at_line_offset (out end, err.loc.end.line-1, err.loc.end.column);
+        source.apply_tag (tag, begin, end);
     });
 
     Vala.CodeContext.pop ();
@@ -162,6 +183,22 @@ public class MainWindow : Gtk.ApplicationWindow {
         set_default_size (800, 600);
 
         ((Gtk.SourceBuffer) srcview.buffer).language = Gtk.SourceLanguageManager.get_default ().get_language ("vala");
+        srcview.has_tooltip = true;
+        srcview.query_tooltip.connect ((x, y, keyboard_tooltip, tooltip) => {
+            int bx, by;
+            srcview.window_to_buffer_coords (Gtk.TextWindowType.WIDGET, x, y, out bx, out by);
+            Gtk.TextIter iter;
+            srcview.get_iter_at_location (out iter, bx, by);
+            var tags = iter.get_tags ();
+            if (tags != null) {
+                string? msg = tags.data.get_data ("message");
+                if (msg != null) {
+                    tooltip.set_text (msg);
+                    return true;
+                }
+            }
+            return false;
+        });
 
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("", new Gtk.CellRendererPixbuf (), "icon-name", 0));
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Message", new Gtk.CellRendererText (), "text", 1));
@@ -178,7 +215,7 @@ public class MainWindow : Gtk.ApplicationWindow {
                 uint8[] contents;
                 try {
                     f.load_contents_async.end (res, out contents, null);
-                    srcview.buffer.text = (string) contents;
+                    srcview.buffer.tag_table.foreach (srcview.buffer.tag_table.remove);
 
                     errorstore.clear ();
                     ((Gtk.TreeStore)symboltree.model).clear ();
