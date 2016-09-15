@@ -80,7 +80,7 @@ void findsyms (Vala.Symbol top, Gtk.TreeStore tree, Gtk.TreeIter? parent = null)
             findsyms (syms[s], tree, cur);
 }
 
-void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, Gtk.TreeStore syms) {
+void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, Gtk.TreeStore syms, string[] packages) {
     var ctx = new Vala.CodeContext ();
     Vala.CodeContext.push (ctx);
 
@@ -96,9 +96,9 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
     ctx.report = new Reporter (errors);
     ctx.add_external_package ("glib-2.0");
     ctx.add_external_package ("gobject-2.0");
-    ctx.add_external_package ("gtk+-3.0");
-    ctx.add_external_package ("gtksourceview-3.0");
-    ctx.add_external_package ("libvala-0.32");
+    foreach (string pkg in packages)
+        ctx.add_external_package (pkg);
+
     /**
      * Vala expects you to handle unknown namespace/missing package errors via Report
      * If you don't quit in case of errors, you will have NULL variable types and CRITICALs
@@ -182,7 +182,7 @@ public class MainWindow : Gtk.ApplicationWindow {
 
                     errorstore.clear ();
                     ((Gtk.TreeStore)symboltree.model).clear ();
-                    vala_stuff (f.get_path (), srcview.buffer, errorstore, (Gtk.TreeStore) symboltree.model);
+                    vala_stuff (f.get_path (), srcview.buffer, errorstore, (Gtk.TreeStore) symboltree.model, packages_entry.text.split(" "));
                 } catch (Error e) {
                     error (e.message);
                 }
