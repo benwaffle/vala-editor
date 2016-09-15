@@ -85,7 +85,7 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
     Vala.CodeContext.push (ctx);
 
     ctx.profile = Vala.Profile.GOBJECT;
-    for (int i = 2; i <= 30; i += 2) {
+    for (int i = 2; i <= 32; i += 2) {
         ctx.add_define ("VALA_0_%d".printf (i));
     }
     ctx.target_glib_major = 2;
@@ -98,7 +98,7 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
     ctx.add_external_package ("gobject-2.0");
     ctx.add_external_package ("gtk+-3.0");
     ctx.add_external_package ("gtksourceview-3.0");
-    ctx.add_external_package ("libvala-0.30");
+    ctx.add_external_package ("libvala-0.32");
     /**
      * Vala expects you to handle unknown namespace/missing package errors via Report
      * If you don't quit in case of errors, you will have NULL variable types and CRITICALs
