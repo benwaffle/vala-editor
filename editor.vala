@@ -222,6 +222,8 @@ public class MainWindow : Gtk.ApplicationWindow {
             srcview.grab_focus ();
         });
 
+        errorstore.set_sort_column_id (2, Gtk.SortType.ASCENDING);
+
         symboltree.model = new Gtk.TreeStore (2, typeof (Gdk.Pixbuf), typeof (string));
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererPixbuf (), "pixbuf", 0);
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererText (), "text", 1);
