@@ -207,9 +207,9 @@ public class MainWindow : Gtk.ApplicationWindow {
 
         error_list.row_activated.connect ((path, col) => {
             Gtk.TreeIter iter;
-            error_list.model.get_iter (out iter, path);
+            errorstore.get_iter (out iter, path);
             int line, column;
-            error_list.model.get (iter,
+            errorstore.get (iter,
                                   2, out line,
                                   3, out column,
                                   -1);
