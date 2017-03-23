@@ -205,6 +205,23 @@ public class MainWindow : Gtk.ApplicationWindow {
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Line", new Gtk.CellRendererText (), "text", 2));
         error_list.append_column (new Gtk.TreeViewColumn.with_attributes ("Column", new Gtk.CellRendererText (), "text", 3));
 
+        error_list.row_activated.connect ((path, col) => {
+            Gtk.TreeIter iter;
+            error_list.model.get_iter (out iter, path);
+            int line, column;
+            error_list.model.get (iter,
+                                  2, out line,
+                                  3, out column,
+                                  -1);
+
+            Gtk.TextIter target;
+            srcview.buffer.get_iter_at_line_offset (out target, line - 1, column - 1);
+            srcview.buffer.select_range (target, target);
+            srcview.scroll_to_iter (target, 0.1, false, 0, 0);
+
+            srcview.grab_focus ();
+        });
+
         symboltree.model = new Gtk.TreeStore (2, typeof (Gdk.Pixbuf), typeof (string));
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererPixbuf (), "pixbuf", 0);
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererText (), "text", 1);
