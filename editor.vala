@@ -90,7 +90,7 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
     Vala.CodeContext.push (ctx);
 
     ctx.profile = Vala.Profile.GOBJECT;
-    for (int i = 2; i <= 32; i += 2) {
+    for (int i = 2; i <= 34; i += 2) {
         ctx.add_define ("VALA_0_%d".printf (i));
     }
     ctx.target_glib_major = 2;
@@ -216,6 +216,7 @@ public class MainWindow : Gtk.ApplicationWindow {
                 try {
                     f.load_contents_async.end (res, out contents, null);
                     srcview.buffer.tag_table.foreach (srcview.buffer.tag_table.remove);
+                    srcview.buffer.text = (string) contents;
 
                     errorstore.clear ();
                     ((Gtk.TreeStore)symboltree.model).clear ();
