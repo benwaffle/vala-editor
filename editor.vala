@@ -228,22 +228,23 @@ public class MainWindow : Gtk.ApplicationWindow {
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererPixbuf (), "pixbuf", 0);
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererText (), "text", 1);
 
-        filechooser.file_set.connect (() => {
-            File f = filechooser.get_file ();
-            f.load_contents_async.begin (null, (obj, res) => {
-                uint8[] contents;
-                try {
-                    f.load_contents_async.end (res, out contents, null);
-                    srcview.buffer.tag_table.foreach (srcview.buffer.tag_table.remove);
-                    srcview.buffer.text = (string) contents;
+        filechooser.file_set.connect (() => load_file (filechooser.get_file ()));
+    }
 
-                    errorstore.clear ();
-                    ((Gtk.TreeStore)symboltree.model).clear ();
-                    vala_stuff (f.get_path (), srcview.buffer, errorstore, (Gtk.TreeStore) symboltree.model, packages_entry.text.split(" "));
-                } catch (Error e) {
-                    error (e.message);
-                }
-            });
+    public void load_file (File file) {
+        file.load_contents_async.begin (null, (obj, res) => {
+            uint8[] contents;
+            try {
+                file.load_contents_async.end (res, out contents, null);
+                srcview.buffer.tag_table.foreach (srcview.buffer.tag_table.remove);
+                srcview.buffer.text = (string) contents;
+
+                errorstore.clear ();
+                ((Gtk.TreeStore) symboltree.model).clear ();
+                vala_stuff (file.get_path (), srcview.buffer, errorstore, (Gtk.TreeStore) symboltree.model, packages_entry.text.split(" "));
+            } catch (Error e) {
+                error (e.message);
+            }
         });
     }
 }
@@ -251,7 +252,17 @@ public class MainWindow : Gtk.ApplicationWindow {
 public class App : Gtk.Application {
     public App () {
         Object (application_id: "me.iofel.vala_editor",
-                flags: ApplicationFlags.FLAGS_NONE);
+                flags: ApplicationFlags.HANDLES_OPEN);
+    }
+
+    public override void open (File[] files, string hint) {
+        if (files.length > 1) {
+           warning ("can only pass 1 file");
+        }
+
+        var win = new MainWindow (this);
+        win.show_all ();
+        win.load_file (files[0]);
     }
 
     public override void activate () {
