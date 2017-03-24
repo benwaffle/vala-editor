@@ -180,11 +180,15 @@ public class MainWindow : Gtk.ApplicationWindow {
     [GtkChild] Gtk.TreeView error_list;
     [GtkChild] Gtk.ListStore errorstore;
 
+    Gtk.SourceBuffer srcbuffer;
+
     public MainWindow (Gtk.Application a) {
         Object (application: a);
         set_default_size (800, 600);
 
-        ((Gtk.SourceBuffer) srcview.buffer).language = Gtk.SourceLanguageManager.get_default ().get_language ("vala");
+        srcview.buffer = srcbuffer = new Gtk.SourceBuffer (null);
+
+        srcbuffer.language = Gtk.SourceLanguageManager.get_default ().get_language ("vala");
         srcview.has_tooltip = true;
         srcview.query_tooltip.connect ((x, y, keyboard_tooltip, tooltip) => {
             int bx, by;
@@ -220,8 +224,8 @@ public class MainWindow : Gtk.ApplicationWindow {
                 return;
 
             Gtk.TextIter target;
-            srcview.buffer.get_iter_at_line_offset (out target, line - 1, column - 1);
-            srcview.buffer.select_range (target, target);
+            srcbuffer.get_iter_at_line_offset (out target, line - 1, column - 1);
+            srcbuffer.select_range (target, target);
             srcview.scroll_to_iter (target, 0.1, false, 0, 0);
 
             srcview.grab_focus ();
@@ -233,24 +237,18 @@ public class MainWindow : Gtk.ApplicationWindow {
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererPixbuf (), "pixbuf", 0);
         symboltree.insert_column_with_attributes (-1, null, new Gtk.CellRendererText (), "text", 1);
 
-        filechooser.file_set.connect (() => load_file (filechooser.get_file ()));
+        filechooser.file_set.connect (() => load_file.begin (filechooser.get_file ()));
     }
 
-    public void load_file (File file) {
-        file.load_contents_async.begin (null, (obj, res) => {
-            uint8[] contents;
-            try {
-                file.load_contents_async.end (res, out contents, null);
-                srcview.buffer.tag_table.foreach (srcview.buffer.tag_table.remove);
-                srcview.buffer.text = (string) contents;
+    public async void load_file (File file) {
+        errorstore.clear ();
+        ((Gtk.TreeStore) symboltree.model).clear ();
 
-                errorstore.clear ();
-                ((Gtk.TreeStore) symboltree.model).clear ();
-                vala_stuff (file.get_path (), srcview.buffer, errorstore, (Gtk.TreeStore) symboltree.model, packages_entry.text.split(" "));
-            } catch (Error e) {
-                error (e.message);
-            }
-        });
+        var gsvf = new Gtk.SourceFile ();
+        gsvf.set_location (file);
+        yield new Gtk.SourceFileLoader (srcbuffer, gsvf).load_async (Priority.DEFAULT, null, (cur, total) => {});
+
+        vala_stuff (file.get_path (), srcbuffer, errorstore, (Gtk.TreeStore) symboltree.model, packages_entry.text.split(" "));
     }
 }
 
@@ -267,7 +265,7 @@ public class App : Gtk.Application {
 
         var win = new MainWindow (this);
         win.show_all ();
-        win.load_file (files[0]);
+        win.load_file.begin (files[0]);
     }
 
     public override void activate () {
