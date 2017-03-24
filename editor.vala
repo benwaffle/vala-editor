@@ -1,8 +1,8 @@
 class SourceError {
-    public Vala.SourceReference loc;
+    public Vala.SourceReference? loc;
     public string message;
 
-    public SourceError(Vala.SourceReference loc, string message) {
+    public SourceError(Vala.SourceReference? loc, string message) {
         this.loc = loc;
         this.message = message;
     }
@@ -31,8 +31,8 @@ class Reporter : Vala.Report {
         store.insert_with_values (null, -1,
             0, "dialog-error",
             1, @"Error: $message",
-            2, source.begin.line,
-            3, source.begin.column);
+            2, source == null ? -1 : source.begin.line,
+            3, source == null ? -1 : source.begin.column);
         ++errors;
     }
     public override void note (Vala.SourceReference? source, string message) {
@@ -146,11 +146,13 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
         tag.underline = Pango.Underline.ERROR;
         source.tag_table.add (tag);
 
-        Gtk.TextIter begin;
-        Gtk.TextIter end;
-        source.get_iter_at_line_offset (out begin, err.loc.begin.line-1, err.loc.begin.column-1);
-        source.get_iter_at_line_offset (out end, err.loc.end.line-1, err.loc.end.column);
-        source.apply_tag (tag, begin, end);
+        if (err.loc != null) {
+            Gtk.TextIter begin;
+            Gtk.TextIter end;
+            source.get_iter_at_line_offset (out begin, err.loc.begin.line-1, err.loc.begin.column-1);
+            source.get_iter_at_line_offset (out end, err.loc.end.line-1, err.loc.end.column);
+            source.apply_tag (tag, begin, end);
+        }
     });
     report.warnlist.foreach (err => {
         var tag = new Gtk.TextTag ();
@@ -213,6 +215,9 @@ public class MainWindow : Gtk.ApplicationWindow {
                                   2, out line,
                                   3, out column,
                                   -1);
+
+            if (line == -1 || column == -1)
+                return;
 
             Gtk.TextIter target;
             srcview.buffer.get_iter_at_line_offset (out target, line - 1, column - 1);
