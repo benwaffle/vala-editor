@@ -90,7 +90,7 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
     Vala.CodeContext.push (ctx);
 
     ctx.profile = Vala.Profile.GOBJECT;
-    for (int i = 2; i <= 34; i += 2) {
+    for (int i = 2; i <= 38; i += 2) {
         ctx.add_define ("VALA_0_%d".printf (i));
     }
     ctx.target_glib_major = 2;

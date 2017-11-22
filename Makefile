@@ -1,7 +1,7 @@
 VALAFLAGS = \
 	--pkg gtk+-3.0 \
 	--pkg gtksourceview-3.0 \
-	--pkg libvala-0.34 \
+	--pkg libvala-0.38 \
 	-g \
 	--target-glib 2.44 \
 	--gresources data/resources.xml
