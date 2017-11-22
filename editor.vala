@@ -94,8 +94,8 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
         ctx.add_define ("VALA_0_%d".printf (i));
     }
     ctx.target_glib_major = 2;
-    ctx.target_glib_major = 44;
-    for (int i = 16; i <= ctx.target_glib_major; i += 2) {
+    ctx.target_glib_minor = 44;
+    for (int i = 16; i <= ctx.target_glib_minor; i += 2) {
         ctx.add_define ("GLIB_2_%d".printf (i));
     }
     ctx.report = new Reporter (errors);
