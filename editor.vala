@@ -91,6 +91,7 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
 
     ctx.profile = Vala.Profile.GOBJECT;
     ctx.report = new Reporter (errors);
+    ctx.set_target_glib_version ("2.56");
     ctx.add_external_package ("glib-2.0");
     ctx.add_external_package ("gobject-2.0");
     foreach (string pkg in packages)
