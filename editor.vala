@@ -90,14 +90,6 @@ void vala_stuff (string filename, Gtk.TextBuffer source, Gtk.ListStore errors, G
     Vala.CodeContext.push (ctx);
 
     ctx.profile = Vala.Profile.GOBJECT;
-    for (int i = 2; i <= 38; i += 2) {
-        ctx.add_define ("VALA_0_%d".printf (i));
-    }
-    ctx.target_glib_major = 2;
-    ctx.target_glib_minor = 44;
-    for (int i = 16; i <= ctx.target_glib_minor; i += 2) {
-        ctx.add_define ("GLIB_2_%d".printf (i));
-    }
     ctx.report = new Reporter (errors);
     ctx.add_external_package ("glib-2.0");
     ctx.add_external_package ("gobject-2.0");
